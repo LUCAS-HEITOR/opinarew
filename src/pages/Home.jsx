@@ -3,7 +3,7 @@ import { useOpiniao } from '../context/OpiniaoContext';
 import './Home.css';
 
 const Home = () => {
-  const { adicionarOpiniao, podeEnviar, tempoRestante, getEstatisticas } = useOpiniao();
+  const { adicionarOpiniao, podeEnviar, tempoRestante, getEstatisticas, carregando } = useOpiniao();
   const [opiniao, setOpiniao] = useState('');
   const [autor, setAutor] = useState('');
   const [mensagem, setMensagem] = useState(null);
