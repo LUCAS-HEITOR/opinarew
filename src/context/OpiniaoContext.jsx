@@ -25,9 +25,9 @@ export const OpiniaoProvider = ({ children }) => {
   const [carregando, setCarregando] = useState(true);
   const [clientId, setClientId] = useState(null);
 
-  // Credenciais do admin
-  const ADMIN_USER = 'admin';
-  const ADMIN_PASS = 'opinarew2024';
+  // Credenciais do admin (ultra seguras!)
+  const ADMIN_USER = 'OpinAreW_Admin2024';
+  const ADMIN_PASS = 'L1v3T0k3n!@2024#SecurePassword$OpinAreW&Admin';
 
   // Gerar ou recuperar clientId (identificador único do navegador)
   useEffect(() => {
