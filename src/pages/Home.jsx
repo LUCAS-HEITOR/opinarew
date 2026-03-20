@@ -118,12 +118,12 @@ const Home = () => {
                   value={opiniao}
                   onChange={(e) => setOpiniao(e.target.value)}
                   placeholder="Escreva aqui sua opinião mais sincera, polêmica ou aleatória..."
-                  maxLength={500}
+                  maxLength={1000}
                   rows={5}
                 />
                 <div className="char-counter">
-                  <span className={opiniao.length > 450 ? 'warning' : ''}>
-                    {opiniao.length}/500
+                  <span className={opiniao.length > 900 ? 'warning' : ''}>
+                    {opiniao.length}/1000
                   </span>
                 </div>
               </div>
