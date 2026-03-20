@@ -63,14 +63,14 @@ export const OpiniaoProvider = ({ children }) => {
     }
   }, []);
 
-  // Verificar se pode enviar (limite de 1 por minuto)
+  // Verificar se pode enviar (limite configurável)
   const podeEnviar = () => {
     const ultimoEnvio = localStorage.getItem('opinarew_ultimo_envio');
     if (!ultimoEnvio) return true;
 
     const agora = Date.now();
     const diferenca = agora - parseInt(ultimoEnvio);
-    const tempoMinimo = 10 * 1000; // 10 segundos para teste
+    const tempoMinimo = 105 * 1000; // 1 minuto e 45 segundos
 
     return diferenca >= tempoMinimo;
   };
@@ -81,7 +81,7 @@ export const OpiniaoProvider = ({ children }) => {
 
     const agora = Date.now();
     const diferenca = agora - parseInt(ultimoEnvio);
-    const tempoMinimo = 10 * 1000; // 10 segundos para teste
+    const tempoMinimo = 105 * 1000; // 1 minuto e 45 segundos
 
     if (diferenca >= tempoMinimo) return 0;
     return Math.ceil((tempoMinimo - diferenca) / 1000);
