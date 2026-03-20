@@ -2,14 +2,12 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import {
   db,
   collection,
-  addDoc,
-  query,
   onSnapshot,
   updateDoc,
   deleteDoc,
   doc,
-  serverTimestamp,
 } from '../config/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const OpiniaoContext = createContext();
 
@@ -25,10 +23,21 @@ export const OpiniaoProvider = ({ children }) => {
   const [opinioes, setOpinioes] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [carregando, setCarregando] = useState(true);
+  const [clientId, setClientId] = useState(null);
 
   // Credenciais do admin
   const ADMIN_USER = 'admin';
   const ADMIN_PASS = 'opinarew2024';
+
+  // Gerar ou recuperar clientId (identificador único do navegador)
+  useEffect(() => {
+    let id = localStorage.getItem('opinarew_client_id');
+    if (!id) {
+      id = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('opinarew_client_id', id);
+    }
+    setClientId(id);
+  }, []);
 
   // Carregar opiniões em tempo real do Firestore
   useEffect(() => {
@@ -87,31 +96,37 @@ export const OpiniaoProvider = ({ children }) => {
     return Math.ceil((tempoMinimo - diferenca) / 1000);
   };
 
-  // Adicionar opinião ao Firestore
+  // Adicionar opinião via Cloud Function (validação no backend)
   const adicionarOpiniao = async (texto, autor) => {
-    console.log('🔥 Tentando adicionar opinião:', { texto, autor });
+    console.log('🔥 Tentando adicionar opinião via Cloud Function:', { texto, autor });
 
-    if (!podeEnviar()) {
-      console.warn('❌ Cooldown ativo');
-      return { success: false, message: 'Aguarde antes de enviar outra opinião!' };
+    if (!clientId) {
+      return { success: false, message: 'Erro ao inicializar cliente. Recarregue a página!' };
     }
 
     try {
-      const novaOpiniao = {
+      const functions = getFunctions();
+      const addOpinionFunction = httpsCallable(functions, 'addOpinion');
+
+      const resultado = await addOpinionFunction({
         texto,
         autor: autor || 'Anônimo',
-        categoria: 'pendente',
-        dataEnvio: new Date().toISOString(),
-        lida: false,
-      };
+        clientId,
+      });
 
-      const docRef = await addDoc(collection(db, 'opinioes'), novaOpiniao);
-      console.log('✅ Opinião salva no Firestore com ID:', docRef.id);
-      localStorage.setItem('opinarew_ultimo_envio', Date.now().toString());
-
-      return { success: true, message: '✨ Opinião enviada com sucesso! Obrigado! 🔥' };
+      console.log('✅ Opinião salva via Cloud Function:', resultado.data);
+      return { success: true, message: resultado.data.message };
     } catch (erro) {
-      console.error('❌ Erro ao salvar opinião:', erro);
+      console.error('❌ Erro ao enviar opinião:', erro);
+
+      // Tratamento específico de erros
+      if (erro.code === 'failed-precondition') {
+        return { success: false, message: erro.message };
+      }
+      if (erro.code === 'invalid-argument') {
+        return { success: false, message: erro.message };
+      }
+
       return { success: false, message: 'Erro ao enviar opinião. Tente novamente!' };
     }
   };

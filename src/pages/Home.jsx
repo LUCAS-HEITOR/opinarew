@@ -1,26 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useOpiniao } from '../context/OpiniaoContext';
 import './Home.css';
 
 const Home = () => {
-  const { adicionarOpiniao, podeEnviar, tempoRestante, getEstatisticas, carregando } = useOpiniao();
+  const { adicionarOpiniao, getEstatisticas, carregando } = useOpiniao();
   const [opiniao, setOpiniao] = useState('');
   const [autor, setAutor] = useState('');
   const [mensagem, setMensagem] = useState(null);
-  const [tempoEspera, setTempoEspera] = useState(0);
   const [enviando, setEnviando] = useState(false);
 
   const stats = getEstatisticas();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTempoEspera(tempoRestante());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [tempoRestante]);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!opiniao.trim()) {
@@ -35,18 +26,16 @@ const Home = () => {
 
     setEnviando(true);
 
-    // Simular delay para efeito visual
-    setTimeout(() => {
-      const resultado = adicionarOpiniao(opiniao.trim(), autor.trim());
-      setMensagem({ tipo: resultado.success ? 'success' : 'error', texto: resultado.message });
+    // Enviar para Cloud Function
+    const resultado = await adicionarOpiniao(opiniao.trim(), autor.trim());
+    setMensagem({ tipo: resultado.success ? 'success' : 'error', texto: resultado.message });
 
-      if (resultado.success) {
-        setOpiniao('');
-        setAutor('');
-      }
+    if (resultado.success) {
+      setOpiniao('');
+      setAutor('');
+    }
 
-      setEnviando(false);
-    }, 800);
+    setEnviando(false);
   };
 
   return (
@@ -134,39 +123,23 @@ const Home = () => {
                 </div>
               )}
 
-              {tempoEspera > 0 ? (
-                <div className="cooldown">
-                  <div className="cooldown-icon">⏳</div>
-                  <div className="cooldown-text">
-                    <span>Aguarde para enviar outra</span>
-                    <span className="cooldown-time">{tempoEspera}s</span>
-                  </div>
-                  <div className="cooldown-bar">
-                    <div
-                      className="cooldown-progress"
-                      style={{ width: `${((60 - tempoEspera) / 60) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="submit"
-                  className="btn btn-primary submit-btn"
-                  disabled={enviando}
-                >
-                  {enviando ? (
-                    <>
-                      <div className="spinner small"></div>
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <span>🚀</span>
-                      Enviar Opinião
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                type="submit"
+                className="btn btn-primary submit-btn"
+                disabled={enviando}
+              >
+                {enviando ? (
+                  <>
+                    <div className="spinner small"></div>
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <span>🚀</span>
+                    Enviar Opinião
+                  </>
+                )}
+              </button>
             </form>
           </div>
         </section>
